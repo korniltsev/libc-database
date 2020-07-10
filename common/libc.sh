@@ -70,21 +70,21 @@ get_ubuntu() {
   local id=`echo $url | perl -n -e '/(libc6[^\/]*)\./ && print $1'`
   echo "  -> ID: $id"
   check_id $id || return
+
+  target_dir="./db/${id}"
+  if [[ -e $target_dir ]]
+  then
+    echo "skipping"
+    return
+  fi
+  mkdir -p ${target_dir}
   echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O $tmp/pkg.deb || die "Failed to download package from $url"
+  wget "$url" 2>/dev/null -O $target_dir/pkg.deb || die "Failed to download package from $url"
   echo "  -> Extracting package"
-  pushd $tmp 1>/dev/null
+  pushd $target_dir 1>/dev/null
   ar x pkg.deb || die "ar failed"
   tar xf data.tar.* || die "tar failed"
   popd 1>/dev/null
-  suffix=
-  cnt=1
-  for libc in $(find $tmp -name libc.so.6 || die "Cannot locate libc.so.6"); do
-    process_libc $libc $id$suffix $info $url
-    cnt=$((cnt+1))
-    suffix=_$cnt
-  done
-  rm -rf $tmp
 }
 
 get_current_debian_like() {
